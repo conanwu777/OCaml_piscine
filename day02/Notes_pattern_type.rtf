@@ -1,0 +1,214 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf200
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs24 \cf0 Pattern Matching
+\b0 \
+\
+let dice x = match x with\
+	| 1 -> "One"\
+	| 2 -> "Two"\
+	| 3 -> "Three"\
+	| 4 -> "Four"\
+	| 5 -> "Five"\
+	| 6 -> "Six"\
+	| _ -> "Error"\
+- '_' represents all other cases, pattern matching has to cover all cases\
+\
+| 'a' .. 'z' | 'A' .. 'Z' -> "True"    -------- if either case are true\
+| _ -> "False"\
+\
+guard:\
+let inbound x = match x with\
+	| y when y > 0 && y < 100 -> "True"\
+	| _ -> "False"\
+---> True when x is between 0 and 100\
+\
+
+\b Type\
+
+\b0 \
+type foo = int     ---------(no let)\
+let x:foo = 3\
+let y:foo = 4.2 -----> does not work\
+\
+
+\b Parametric polymorphism
+\b0 \
+\
+'a ---> alpha    can't tell which type it is\
+\
+let f g x = g x;;\
+f : ('a -> 'b) -> 'a -> 'b\
+---alpha and beta are unknown types\
+(=)\
+'a -> 'a -> bool\
+\
+
+\b Tuples
+\b0 \
+\
+tuples: groups of potentially different types\
+let pair = (2, 3)\
+let quinte = ("1", "2", "3", "4", "5")\
+let triple = ("bar", 42, true)\
+\
+type is the cartesian product e.g. string * int * bool\
+\
+can pattern match with tuples\
+let foo = ("bar", 42, true)\
+let f x = match x with\
+	| ("Bar", 42, false) -> print_endline "1"\
+	| ("Bar", 42, true) -> print_endline "2"\
+	| (_, _, _) -> print_endline "3"\
+\
+
+\b Lists
+\b0 \
+\
+lists construct with ::\
+let a = 1 :: 2 :: 3 :: []       ---> three elements, an empty list element at the end\
+let b = 1 :: 2 :: [3]     ---> end with list with one element\
+let c = 1 :: [2 ; 3]\
+let d = [1;2;3]\
+\
+------ all four lists are the same\
+list can only contain elements of the same type\
+\
+let rec is_in_list x list = match list with\
+	| [] -> false\
+	| head::other -> (x = head) || (is_in_list x other)\
+---breaks down first element from rest\
+\
+let sum_2_first = function\
+	| head::second::other -> head + second\
+	| head::other -> head\
+	| [] ->0\
+---sums first two element if they exist, or 1 if list had only 1 element\
+\
+
+\b Variants
+\b0 \
+    - algebraic type, similar to enum\
+	---define a type and all possible values it can take\
+type card = As | King | Queen | Jack | ....\
+	-> all constructors (here it's one card each) must start with capital letter\
+let ourcard = As\
+let cardvalue c = match c with\
+	| As -> 14\
+	| King -> 13\
+	...\
+\
+parametrized variants\
+type expr = Literal of int         -------- xxx of xxx  Literals member of int\
+	| Prod of expr * expr\
+	| Sum of expr * expr\
+\
+let rec eval_expr e = match e with\
+	| Literal n -> n\
+	| Prod (lhs, rhs) -> (eval_expr lhs) * (eval_expr rhs)\
+	| Sum (lhs, rhs) -> (eval_expr lhs) + (eval_expr rhs)\
+\
+let () =\
+	let e1 = Literal 42 in\
+	let e2 = Sum (Literal 40, Literal 2) in\
+	let e3 = Prod (Literal 21, Literal 2) in\
+	Printf.printf "42 = %d\\n" (eval_expr e1);\
+	...\
+\
+
+\b Polymorphic variants
+\b0 \
+	-> variant containing constructors\
+`A ----- [> `A ] = `A  ---`A is of constructor type containing at least the `A constructor\
+(`B 4) ------ [> `B of int ] = `B 4    B type is constructed based on int\
+[`A ; (`B 4)] -----[> `A | `B of int ] list = [`A; `B 4]\
+\
+let f = function\
+	| `Foo a -> 1\
+	| `Bar -> 2\
+---- f : [< `Bar | `Foo of 'a ] -> int = <fun>\
+		-- back error means pattern matching is exhaustive\
+ '>' contains at least following constructors\
+'<' containing only following constructors\
+\
+
+\b Product type
+\b0 \
+	- like structure in C\
+\
+Define:\
+\
+type student = \{\
+	name : string;\
+	login : string;\
+	state : string\
+\}\
+----all fields needs to be lower cased\
+\
+Init:\
+let marvin = \{\
+	name = "Marvin";\
+	login = "marvin";\
+	state = "depressed"\
+\}\
+\
+access:\
+ print_endline marvin.name\
+\
+Use product in pattern matching:\
+let print_record e = match e with\
+	| \{login; _\} when login = "marvin" -> e.nom\
+	| \{nom; state; _\} -> "Other"\
+\
+attributes are constant after defined, cannot change using "." when accessing\
+\
+
+\b Option type
+\b0 \
+	-define either nothing or something (can be used to handle errors like NULL)\
+type int_option = Some of int | None\
+let a = Some 42      ---> a is something of an int\
+\
+pattern matching:\
+let is_nothing x = match x with\
+	|None	-> "Nothing"\
+	|Some n -> "Something" ^ (string_of_int n)\
+\
+let extract x = match x with\
+	| None -> 0\
+	| Some x -> x\
+\
+option type is in the standard library\
+\
+
+\b Parametrized types
+\b0 \
+	---allow to define an arbitrate type, defined only when instantiated\
+\
+type 'a indexed = int * 'a    -> only defined when first used\
+\
+type 'a option = Some of 'a\
+	| None\
+\
+
+\b Function and fun keyword\
+
+\b0 \
+let f x y = x + y\
+let f = fun x y -> x + y\
+let f = function x -> function y -> x + y\
+------same object\
+*function has to be single parameter\
+*fun can have multiple parameters\
+	---both use "->" after parameters\
+\
+Pattern matching for function (no need to write match ... with):\
+let f = function\
+	| 0 -> 0\
+	|_ -> 1\
+\
+}
